@@ -1,0 +1,192 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  CITIZEN
+  RESPONDER
+  ORGANIZATION
+  ADMIN
+}
+
+enum ResponderType {
+  MEDICAL
+  FIRE
+  POLICE
+  VOLUNTEER
+  OTHER
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum AvailabilityStatus {
+  AVAILABLE
+  BUSY
+  OFFLINE
+}
+
+enum EmergencyType {
+  MEDICAL
+  FIRE
+  ACCIDENT
+  SECURITY
+  NATURAL_DISASTER
+  DOMESTIC
+  OTHER
+}
+
+enum EmergencyPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum EmergencyStatus {
+  PENDING
+  SEARCHING
+  ASSIGNED
+  ACCEPTED
+  EN_ROUTE
+  ARRIVED
+  RESOLVED
+  CANCELLED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  phone     String?
+  role      UserRole @default(CITIZEN)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  emergencies      Emergency[]
+  responder        Responder?
+  organization     Organization?
+  notifications    Notification[]
+  sentMessages     Message[] @relation("SentMessages")
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  name      String
+  type      String
+  address   String?
+  latitude  Float?
+  longitude Float?
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user       User        @relation(fields: [userId], references: [id])
+  responders Responder[]
+}
+
+model Responder {
+  id                 String             @id @default(cuid())
+  userId             String             @unique
+  organizationId     String?
+  responderType      ResponderType
+  availability       AvailabilityStatus @default(OFFLINE)
+  verificationStatus VerificationStatus @default(PENDING)
+  latitude           Float?
+  longitude          Float?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  user          User                 @relation(fields: [userId], references: [id])
+  organization  Organization?        @relation(fields: [organizationId], references: [id])
+  assignments   IncidentAssignment[]
+  locations     LocationUpdate[]
+}
+
+model Emergency {
+  id          String            @id @default(cuid())
+  userId      String
+  type        EmergencyType
+  description String?
+  priority    EmergencyPriority @default(MEDIUM)
+  status      EmergencyStatus   @default(PENDING)
+  latitude    Float
+  longitude   Float
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  resolvedAt  DateTime?
+
+  user         User                 @relation(fields: [userId], references: [id])
+  assignments  IncidentAssignment[]
+  messages     Message[]
+}
+
+model IncidentAssignment {
+  id           String    @id @default(cuid())
+  emergencyId  String
+  responderId  String
+  assignedAt   DateTime  @default(now())
+  acceptedAt   DateTime?
+  arrivedAt    DateTime?
+  resolvedAt   DateTime?
+
+  emergency Emergency @relation(fields: [emergencyId], references: [id])
+  responder Responder @relation(fields: [responderId], references: [id])
+
+  @@index([emergencyId])
+  @@index([responderId])
+}
+
+model LocationUpdate {
+  id          String   @id @default(cuid())
+  responderId String
+  latitude    Float
+  longitude   Float
+  timestamp   DateTime @default(now())
+
+  responder Responder @relation(fields: [responderId], references: [id])
+
+  @@index([responderId])
+  @@index([timestamp])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  emergencyId String
+  senderId    String
+  message     String
+  createdAt   DateTime @default(now())
+
+  emergency Emergency @relation(fields: [emergencyId], references: [id])
+  sender    User      @relation("SentMessages", fields: [senderId], references: [id])
+
+  @@index([emergencyId])
+  @@index([senderId])
+}
