@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { register, login, } from "../../controllers/auth/auth.controller";
+import { register, login, registerResponderController, registerOrganizationController, } from "../../controllers/auth/auth.controller";
 import { authenticate } from "../../middleware/auth.middleware";
 import { authorizeRoles } from "../../middleware/role.middleware";
 import { UserRole } from "../../generated/prisma/client";
@@ -8,6 +8,14 @@ const router = Router();
 
 router.post("/register", register);
 router.post("/login", login);
+router.post(
+  "/register/responder",
+  registerResponderController
+);
+router.post(
+  "/register/organization",
+  registerOrganizationController
+);
 
 router.get("/me", authenticate, (req, res) => {
   res.status(200).json({
@@ -29,6 +37,7 @@ router.get(
     });
   }
 );
+
 
 router.get(
   "/admin",

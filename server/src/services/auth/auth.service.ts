@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import { prisma } from "../../config/database";
 import { UserRole } from "../../generated/prisma/client";
 import { generateToken } from "../../utils/jwt";
+import { ResponderType } from "../../generated/prisma/client";
 
 //Register
 interface RegisterInput {
@@ -9,7 +10,6 @@ interface RegisterInput {
   email: string;
   password: string;
   phone?: string;
-  role?: UserRole;
 }
 
 export const registerUser = async (data: RegisterInput) => {
@@ -31,7 +31,7 @@ export const registerUser = async (data: RegisterInput) => {
       email: data.email,
       password: hashedPassword,
       phone: data.phone,
-      role: data.role ?? UserRole.CITIZEN,
+      role: UserRole.CITIZEN,
     },
   });
 
@@ -92,5 +92,120 @@ export const loginUser = async (data: LoginInput) => {
       phone: user.phone,
       role: user.role,
     },
+  };
+};
+
+
+export const registerResponder = async (data: {
+  name: string;
+  email: string;
+  password: string;
+  phone?: string;
+  responderType: ResponderType;
+}) => {
+  const existingUser = await prisma.user.findUnique({
+    where: {
+      email: data.email,
+    },
+  });
+
+  if (existingUser) {
+    return {
+      error: "EMAIL_EXISTS",
+    };
+  }
+
+  const hashedPassword = await bcrypt.hash(data.password, 10);
+
+  const user = await prisma.user.create({
+    data: {
+      name: data.name,
+      email: data.email,
+      password: hashedPassword,
+      phone: data.phone,
+      role: "RESPONDER",
+      responder: {
+        create: {
+          responderType: data.responderType,
+          availability: "OFFLINE",
+          verificationStatus: "PENDING",
+        },
+      },
+    },
+    include: {
+      responder: true,
+    },
+  });
+
+  const token = generateToken({
+    userId: user.id,
+    role: user.role,
+  });
+
+  return {
+    user,
+    token,
+  };
+};
+
+
+export const registerOrganization = async (data: {
+  name: string;
+  email: string;
+  password: string;
+  phone?: string;
+  organizationName: string;
+  type: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+}) => {
+  const existingUser = await prisma.user.findUnique({
+    where: {
+      email: data.email,
+    },
+  });
+
+  if (existingUser) {
+    return {
+      error: "EMAIL_EXISTS",
+    };
+  }
+
+  const hashedPassword = await bcrypt.hash(data.password, 10);
+
+  const user = await prisma.user.create({
+    data: {
+      name: data.name,
+      email: data.email,
+      password: hashedPassword,
+      phone: data.phone,
+      role: "ORGANIZATION",
+
+      organization: {
+        create: {
+          name: data.organizationName,
+          type: data.type,
+          address: data.address,
+          latitude: data.latitude,
+          longitude: data.longitude,
+          verified: false,
+        },
+      },
+    },
+
+    include: {
+      organization: true,
+    },
+  });
+
+  const token = generateToken({
+    userId: user.id,
+    role: user.role,
+  });
+
+  return {
+    user,
+    token,
   };
 };
