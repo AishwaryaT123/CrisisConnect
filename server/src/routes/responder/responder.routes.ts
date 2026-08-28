@@ -3,6 +3,8 @@ import { authenticate } from "../../middleware/auth.middleware";
 import { authorizeRoles } from "../../middleware/role.middleware";
 import { UserRole } from "../../generated/prisma/client";
 import { createResponderController, getMyResponderProfileController,   updateResponderAvailabilityController, } from "../../controllers/responder/responder.controller";
+import { updateLocationController } from "../../controllers/responder/location.controller";
+import { getNearbyRespondersController } from "../../controllers/responder/nearby.controller";
 
 const router = Router();
 
@@ -25,6 +27,18 @@ router.patch(
   authenticate,
   authorizeRoles(UserRole.RESPONDER),
   updateResponderAvailabilityController
+);
+
+router.patch(
+  "/location",
+  authenticate,
+  updateLocationController
+);
+
+router.get(
+  "/nearby",
+  authenticate,
+  getNearbyRespondersController
 );
 
 export default router;
