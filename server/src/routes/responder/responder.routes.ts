@@ -5,6 +5,7 @@ import { UserRole } from "../../generated/prisma/client";
 import { createResponderController, getMyResponderProfileController,   updateResponderAvailabilityController, } from "../../controllers/responder/responder.controller";
 import { updateLocationController } from "../../controllers/responder/location.controller";
 import { getNearbyRespondersController } from "../../controllers/responder/nearby.controller";
+import { acceptAssignmentController, markAssignmentEnRouteController, } from "../../controllers/responder/assignment.controller";
 
 const router = Router();
 
@@ -39,6 +40,18 @@ router.get(
   "/nearby",
   authenticate,
   getNearbyRespondersController
+);
+
+router.patch(
+  "/assignments/:assignmentId/accept",
+  authenticate,
+  acceptAssignmentController
+);
+
+router.patch(
+  "/assignments/:assignmentId/en-route",
+  authenticate,
+  markAssignmentEnRouteController
 );
 
 export default router;

@@ -4,6 +4,9 @@ import { createEmergencyController,  getMyEmergenciesController, getEmergencyByI
 import {
   getRespondersForEmergencyController,
 } from "../../controllers/emergency/emergency-responder.controller";
+import {
+  assignResponderController,
+} from "../../controllers/emergency/assignment.controller";
 
 const router = Router();
 
@@ -29,6 +32,12 @@ router.get(
   "/:id/responders",
   authenticate,
   getRespondersForEmergencyController
+);
+
+router.post(
+  "/:id/assign",
+  authenticate,
+  assignResponderController
 );
 
 router.get(
