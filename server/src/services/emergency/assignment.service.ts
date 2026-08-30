@@ -1,5 +1,6 @@
 import { prisma } from "../../config/database";
 import { calculateDistance } from "../../utils/distance";
+import { createNotification } from "../notification/notification.service";
 
 export const assignNearestResponder = async (
     emergencyId: string,
@@ -117,6 +118,12 @@ export const assignNearestResponder = async (
             return createdAssignment;
         }
     );
+
+    await createNotification({
+        userId: emergency.userId,
+        type: "RESPONDER_ASSIGNED",
+        message: `A ${selected.responder.responderType.toLowerCase()} responder has been assigned to your emergency.`,
+    });
 
     return {
         assignment,
