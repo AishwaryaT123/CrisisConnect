@@ -8,7 +8,7 @@ export const assignResponderController = async (
   try {
     const { id } = req.params;
 
-    const radius = req.body.radius
+    const radius = req.body?.radius
       ? Number(req.body.radius)
       : 10;
 

@@ -1,4 +1,5 @@
 import { prisma } from "../../config/database";
+import { createNotification } from "../notification/notification.service";
 
 export const acceptAssignment = async (
     userId: string,
@@ -90,6 +91,12 @@ export const acceptAssignment = async (
             });
 
         return assignmentWithDetails;
+    });
+
+    await createNotification({
+        userId: assignment.emergency.userId,
+        type: "EMERGENCY_ACCEPTED",
+        message: "A responder has accepted your emergency request.",
     });
 
     return {
@@ -196,6 +203,12 @@ export const markAssignmentEnRoute = async (
         });
     });
 
+    await createNotification({
+        userId: emergency.userId,
+        type: "EMERGENCY_EN_ROUTE",
+        message: "The responder is now on the way to your location.",
+    });
+
     return {
         assignment: result,
     };
@@ -298,6 +311,12 @@ export const markAssignmentArrived = async (
                 },
             },
         });
+    });
+
+    await createNotification({
+        userId: emergency.userId,
+        type: "EMERGENCY_ARRIVED",
+        message: "The responder has arrived at your location.",
     });
 
     return {
@@ -420,6 +439,12 @@ export const resolveAssignment = async (
                 },
             },
         });
+    });
+
+    await createNotification({
+        userId: emergency.userId,
+        type: "EMERGENCY_RESOLVED",
+        message: "Your emergency has been resolved.",
     });
 
     return {
