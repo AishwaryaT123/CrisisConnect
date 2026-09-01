@@ -1,4 +1,5 @@
 import { prisma } from "../../config/database";
+import { getIO } from "../../socket/socket.server";
 
 interface CreateNotificationInput {
     userId: string;
@@ -18,6 +19,11 @@ export const createNotification = async ({
             message,
         },
     });
+
+    getIO()
+        .to(`user:${userId}`)
+        .emit("notification", notification);
+
 
     return notification;
 };

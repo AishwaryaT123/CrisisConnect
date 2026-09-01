@@ -1,10 +1,14 @@
 import express from "express";
 import cors from "cors";
+import http from "http";
+
 import authRoutes from "./routes/auth/auth.routes";
 import emergencyRoutes from "./routes/emergency/emergency.routes";
 import responderRoutes from "./routes/responder/responder.routes";
 import adminRoutes from "./routes/admin/admin.routes";
 import notificationRoutes from "./routes/notification/notification.routes";
+
+import { initializeSocket } from "./socket/socket.server";
 
 const app = express();
 
@@ -20,6 +24,10 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/notifications", notificationRoutes);
 
 
-app.listen(PORT, () => {
+const httpServer = http.createServer(app);
+
+initializeSocket(httpServer);
+
+httpServer.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
