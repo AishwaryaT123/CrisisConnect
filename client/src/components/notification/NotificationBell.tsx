@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { socket } from "../../services/socket";
+import { getToken } from "../../services/auth/auth.service";
 
 interface Notification {
   id: string;
@@ -10,31 +11,40 @@ interface Notification {
   createdAt: string;
 }
 
-interface Props {
+interface NotificationBellProps {
   userId: string;
 }
 
-const NotificationBell = ({ userId }: Props) => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [isOpen, setIsOpen] = useState(false);
+const API_URL = "http://localhost:5000/api";
 
-  const token = localStorage.getItem("token");
+const NotificationBell = ({
+  userId,
+}: NotificationBellProps) => {
+  const [notifications, setNotifications] =
+    useState<Notification[]>([]);
 
-  // =========================================================
-  // FETCH EXISTING NOTIFICATIONS
-  // =========================================================
+  const [isOpen, setIsOpen] =
+    useState(false);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  // =====================================================
+  // GET NOTIFICATIONS
+  // =====================================================
 
   useEffect(() => {
     const fetchNotifications = async () => {
-      if (!token) {
-        console.error("JWT token not found in Local Storage");
+      const token = getToken();
+
+      if (!token || !userId) {
+        setLoading(false);
         return;
       }
 
       try {
         const response = await fetch(
-          "http://localhost:5000/api/notifications",
+          `${API_URL}/notifications`,
           {
             method: "GET",
             headers: {
@@ -47,106 +57,132 @@ const NotificationBell = ({ userId }: Props) => {
         const data = await response.json();
 
         if (!response.ok) {
-          console.error(
-            "Failed to fetch notifications:",
-            data
+          throw new Error(
+            data.message ||
+              "Failed to fetch notifications"
           );
-          return;
         }
 
-        if (data.success) {
-          const fetchedNotifications: Notification[] =
-            data.data.notifications || data.data;
-
-          setNotifications(fetchedNotifications);
-
-          const unread = fetchedNotifications.filter(
-            (notification) => !notification.read
-          ).length;
-
-          setUnreadCount(unread);
-        }
+        setNotifications(
+          data.data || []
+        );
       } catch (error) {
         console.error(
           "Failed to fetch notifications:",
           error
         );
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchNotifications();
-  }, [userId, token]);
+  }, [userId]);
 
-  // =========================================================
-  // REAL-TIME SOCKET.IO NOTIFICATIONS
-  // =========================================================
+  // =====================================================
+  // REAL-TIME SOCKET NOTIFICATIONS
+  // =====================================================
 
   useEffect(() => {
     if (!userId) {
       return;
     }
 
-    if (!socket.connected) {
-      socket.connect();
-    }
-
-    socket.emit("join-user-room", userId);
-
     const handleNotification = (
       notification: Notification
     ) => {
       console.log(
-        "🔔 New notification:",
+        "🔔 New real-time notification:",
         notification
       );
 
-      setNotifications((prev) => {
-        if (
-          prev.some(
-            (item) => item.id === notification.id
-          )
-        ) {
-          return prev;
+      /*
+       * Make sure the notification belongs
+       * to the currently logged-in user.
+       */
+      if (
+        notification.userId !== userId
+      ) {
+        return;
+      }
+
+      setNotifications((previous) => {
+        /*
+         * Prevent duplicate notifications.
+         */
+        const alreadyExists =
+          previous.some(
+            (item) =>
+              item.id === notification.id
+          );
+
+        if (alreadyExists) {
+          return previous;
         }
 
-        return [notification, ...prev];
+        return [
+          notification,
+          ...previous,
+        ];
       });
-
-      if (!notification.read) {
-        setUnreadCount((prev) => prev + 1);
-      }
     };
+
+    // Connect socket
+
+    if (!socket.connected) {
+      socket.connect();
+    }
+
+    // Join this user's private room
+
+    socket.emit(
+      "join-user-room",
+      userId
+    );
+
+    console.log(
+      `🔌 Joined notification room: user:${userId}`
+    );
+
+    // Listen for notifications
 
     socket.on(
       "notification",
       handleNotification
     );
 
+    // Cleanup
+
     return () => {
       socket.off(
         "notification",
         handleNotification
       );
+
+      socket.disconnect();
+
+      console.log(
+        "🔌 Notification socket disconnected"
+      );
     };
   }, [userId]);
 
-  // =========================================================
-  // MARK NOTIFICATION AS READ
-  // =========================================================
+  // =====================================================
+  // MARK AS READ
+  // =====================================================
 
   const markAsRead = async (
     notificationId: string
   ) => {
+    const token = getToken();
+
     if (!token) {
-      console.error(
-        "JWT token not found in Local Storage"
-      );
       return;
     }
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/notifications/${notificationId}/read`,
+        `${API_URL}/notifications/${notificationId}/read`,
         {
           method: "PATCH",
           headers: {
@@ -159,29 +195,23 @@ const NotificationBell = ({ userId }: Props) => {
       const data = await response.json();
 
       if (!response.ok) {
-        console.error(
-          "Failed to mark notification as read:",
-          data
+        throw new Error(
+          data.message ||
+            "Failed to mark notification as read"
         );
-        return;
       }
 
-      if (data.success) {
-        setNotifications((prev) =>
-          prev.map((notification) =>
-            notification.id === notificationId
-              ? {
+      setNotifications((previous) =>
+        previous.map((notification) =>
+          notification.id ===
+          notificationId
+            ? {
                 ...notification,
                 read: true,
               }
-              : notification
-          )
-        );
-
-        setUnreadCount((prev) =>
-          Math.max(0, prev - 1)
-        );
-      }
+            : notification
+        )
+      );
     } catch (error) {
       console.error(
         "Failed to mark notification as read:",
@@ -190,11 +220,23 @@ const NotificationBell = ({ userId }: Props) => {
     }
   };
 
-  // =========================================================
-  // NOTIFICATION ICON
-  // =========================================================
+  // =====================================================
+  // NOTIFICATION COUNT
+  // =====================================================
 
-  const getNotificationIcon = (type: string) => {
+  const unreadCount =
+    notifications.filter(
+      (notification) =>
+        !notification.read
+    ).length;
+
+  // =====================================================
+  // NOTIFICATION ICON
+  // =====================================================
+
+  const getNotificationIcon = (
+    type: string
+  ) => {
     switch (type) {
       case "RESPONDER_ASSIGNED":
         return "🚑";
@@ -209,102 +251,99 @@ const NotificationBell = ({ userId }: Props) => {
         return "📍";
 
       case "EMERGENCY_RESOLVED":
-        return "🎉";
+        return "✔️";
 
       default:
         return "🔔";
     }
   };
 
-  // =========================================================
+  // =====================================================
   // NOTIFICATION TITLE
-  // =========================================================
+  // =====================================================
 
-  const formatNotificationType = (
+  const getNotificationTitle = (
     type: string
   ) => {
-    return type
-      .replaceAll("_", " ")
-      .toLowerCase()
-      .replace(/\b\w/g, (char) =>
-        char.toUpperCase()
-      );
+    switch (type) {
+      case "RESPONDER_ASSIGNED":
+        return "Responder Assigned";
+
+      case "EMERGENCY_ACCEPTED":
+        return "Emergency Accepted";
+
+      case "EMERGENCY_EN_ROUTE":
+        return "Responder En Route";
+
+      case "EMERGENCY_ARRIVED":
+        return "Responder Arrived";
+
+      case "EMERGENCY_RESOLVED":
+        return "Emergency Resolved";
+
+      default:
+        return "Notification";
+    }
   };
 
-  // =========================================================
-  // TIME FORMAT
-  // =========================================================
+  // =====================================================
+  // DATE FORMAT
+  // =====================================================
 
-  const formatTime = (date: string) => {
-    return new Date(date).toLocaleString();
+  const formatDate = (
+    date: string
+  ) => {
+    return new Date(
+      date
+    ).toLocaleString();
   };
 
-  // =========================================================
+  // =====================================================
   // UI
-  // =========================================================
+  // =====================================================
 
   return (
     <div
       style={{
         position: "relative",
-        fontFamily:
-          "Arial, Helvetica, sans-serif",
       }}
     >
-      {/* =====================================================
-          NOTIFICATION BUTTON
-      ====================================================== */}
+      {/* BELL */}
 
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() =>
+          setIsOpen(!isOpen)
+        }
         style={{
           position: "relative",
-          width: "48px",
-          height: "48px",
+          width: "42px",
+          height: "42px",
           border: "none",
-          borderRadius: "12px",
-          background: isOpen
-            ? "#e8eef7"
-            : "transparent",
+          borderRadius: "50%",
+          background: "#1f2937",
+          color: "#ffffff",
           cursor: "pointer",
+          fontSize: "21px",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          transition: "all 0.2s ease",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background =
-            "#e8eef7";
-        }}
-        onMouseLeave={(e) => {
-          if (!isOpen) {
-            e.currentTarget.style.background =
-              "transparent";
-          }
         }}
         title="Notifications"
       >
-        <span
-          style={{
-            fontSize: "27px",
-            lineHeight: 1,
-          }}
-        >
-          🔔
-        </span>
+        🔔
 
-        {/* Unread Badge */}
+        {/* UNREAD BADGE */}
 
         {unreadCount > 0 && (
           <span
             style={{
               position: "absolute",
-              top: "-2px",
-              right: "-2px",
-              minWidth: "21px",
-              height: "21px",
+              top: "-4px",
+              right: "-4px",
+              minWidth: "20px",
+              height: "20px",
               padding: "0 5px",
-              borderRadius: "999px",
+              borderRadius: "10px",
               background: "#ef4444",
               color: "#ffffff",
               fontSize: "11px",
@@ -312,7 +351,8 @@ const NotificationBell = ({ userId }: Props) => {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              border: "2px solid #111827",
+              border:
+                "2px solid #111827",
               boxSizing: "border-box",
             }}
           >
@@ -323,76 +363,52 @@ const NotificationBell = ({ userId }: Props) => {
         )}
       </button>
 
-      {/* =====================================================
-          NOTIFICATION DROPDOWN
-      ====================================================== */}
+      {/* DROPDOWN */}
 
       {isOpen && (
         <div
           style={{
             position: "absolute",
-            top: "58px",
-            right: "0",
-            width: "390px",
-            maxWidth:
-              "calc(100vw - 30px)",
+            top: "52px",
+            right: 0,
+            width: "380px",
+            maxHeight: "500px",
+            overflowY: "auto",
             background: "#ffffff",
-            borderRadius: "16px",
             border:
-              "1px solid #e5e7eb",
+              "1px solid #e2e8f0",
+            borderRadius: "12px",
             boxShadow:
-              "0 20px 50px rgba(0, 0, 0, 0.18)",
-            overflow: "hidden",
+              "0 15px 40px rgba(0, 0, 0, 0.18)",
             zIndex: 1000,
           }}
         >
-          {/* =================================================
-              HEADER
-          ================================================== */}
+          {/* HEADER */}
 
           <div
             style={{
-              padding: "18px 20px",
+              padding: "16px 18px",
               borderBottom:
-                "1px solid #e5e7eb",
+                "1px solid #e2e8f0",
               display: "flex",
+              justifyContent:
+                "space-between",
               alignItems: "center",
-              justifyContent: "space-between",
-              background: "#ffffff",
             }}
           >
-            <div>
-              <div
-                style={{
-                  fontSize: "18px",
-                  fontWeight: "700",
-                  color: "#111827",
-                }}
-              >
-                Notifications
-              </div>
-
-              <div
-                style={{
-                  marginTop: "3px",
-                  fontSize: "12px",
-                  color: "#6b7280",
-                }}
-              >
-                Stay updated with your emergency
-              </div>
-            </div>
-
-            {/* Unread Count */}
+            <strong
+              style={{
+                color: "#0f172a",
+                fontSize: "16px",
+              }}
+            >
+              Notifications
+            </strong>
 
             {unreadCount > 0 && (
               <span
                 style={{
-                  padding:
-                    "5px 10px",
-                  borderRadius: "999px",
-                  background: "#eff6ff",
-                  color: "#2563eb",
+                  color: "#ef4444",
                   fontSize: "12px",
                   fontWeight: "600",
                 }}
@@ -402,279 +418,176 @@ const NotificationBell = ({ userId }: Props) => {
             )}
           </div>
 
-          {/* =================================================
-              NOTIFICATION LIST
-          ================================================== */}
+          {/* LOADING */}
 
-          <div
-            style={{
-              maxHeight: "420px",
-              overflowY: "auto",
-            }}
-          >
-            {notifications.length === 0 ? (
-              /* EMPTY STATE */
+          {loading && (
+            <div
+              style={{
+                padding: "30px",
+                textAlign: "center",
+                color: "#64748b",
+                fontSize: "14px",
+              }}
+            >
+              Loading notifications...
+            </div>
+          )}
 
+          {/* EMPTY */}
+
+          {!loading &&
+            notifications.length === 0 && (
               <div
                 style={{
-                  padding: "50px 20px",
+                  padding: "35px 20px",
                   textAlign: "center",
+                  color: "#64748b",
+                  fontSize: "14px",
                 }}
               >
                 <div
                   style={{
-                    width: "60px",
-                    height: "60px",
-                    margin: "0 auto 15px",
-                    borderRadius: "50%",
-                    background: "#f3f4f6",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "28px",
+                    fontSize: "30px",
+                    marginBottom: "10px",
                   }}
                 >
                   🔕
                 </div>
 
-                <div
-                  style={{
-                    fontSize: "15px",
-                    fontWeight: "600",
-                    color: "#374151",
-                  }}
-                >
-                  No notifications
-                </div>
-
-                <div
-                  style={{
-                    marginTop: "5px",
-                    fontSize: "12px",
-                    color: "#9ca3af",
-                  }}
-                >
-                  You're all caught up.
-                </div>
+                No notifications yet.
               </div>
-            ) : (
-              notifications.map(
-                (notification) => (
+            )}
+
+          {/* NOTIFICATIONS */}
+
+          {!loading &&
+            notifications.map(
+              (notification) => (
+                <div
+                  key={notification.id}
+                  onClick={() => {
+                    if (
+                      !notification.read
+                    ) {
+                      markAsRead(
+                        notification.id
+                      );
+                    }
+                  }}
+                  style={{
+                    padding:
+                      "15px 18px",
+                    borderBottom:
+                      "1px solid #f1f5f9",
+                    background:
+                      notification.read
+                        ? "#ffffff"
+                        : "#eff6ff",
+                    cursor:
+                      notification.read
+                        ? "default"
+                        : "pointer",
+                    transition:
+                      "background 0.2s ease",
+                  }}
+                >
                   <div
-                    key={notification.id}
-                    onClick={() => {
-                      if (
-                        !notification.read
-                      ) {
-                        markAsRead(
-                          notification.id
-                        );
-                      }
-                    }}
                     style={{
-                      padding:
-                        "16px 18px",
-                      borderBottom:
-                        "1px solid #f0f1f3",
-                      background:
-                        notification.read
-                          ? "#ffffff"
-                          : "#eff6ff",
-                      cursor:
-                        notification.read
-                          ? "default"
-                          : "pointer",
-                      transition:
-                        "background 0.2s ease",
-                    }}
-                    onMouseEnter={(e) => {
-                      if (
-                        !notification.read
-                      ) {
-                        e.currentTarget.style.background =
-                          "#e8f1ff";
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (
-                        !notification.read
-                      ) {
-                        e.currentTarget.style.background =
-                          "#eff6ff";
-                      }
+                      display: "flex",
+                      gap: "12px",
                     }}
                   >
+                    {/* ICON */}
+
                     <div
                       style={{
-                        display: "flex",
-                        gap: "13px",
-                        alignItems:
-                          "flex-start",
+                        fontSize: "22px",
                       }}
                     >
-                      {/* ICON */}
+                      {getNotificationIcon(
+                        notification.type
+                      )}
+                    </div>
 
+                    {/* CONTENT */}
+
+                    <div
+                      style={{
+                        flex: 1,
+                      }}
+                    >
                       <div
                         style={{
-                          flexShrink: 0,
-                          width: "42px",
-                          height: "42px",
-                          borderRadius: "12px",
-                          background:
-                            notification.read
-                              ? "#f3f4f6"
-                              : "#dbeafe",
                           display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: "20px",
+                          justifyContent:
+                            "space-between",
+                          gap: "10px",
                         }}
                       >
-                        {getNotificationIcon(
-                          notification.type
-                        )}
-                      </div>
-
-                      {/* CONTENT */}
-
-                      <div
-                        style={{
-                          flex: 1,
-                          minWidth: 0,
-                        }}
-                      >
-                        {/* Title */}
-
-                        <div
+                        <strong
                           style={{
-                            display: "flex",
-                            alignItems:
-                              "center",
-                            justifyContent:
-                              "space-between",
-                            gap: "8px",
-                          }}
-                        >
-                          <span
-                            style={{
-                              fontSize:
-                                "14px",
-                              fontWeight:
-                                notification.read
-                                  ? "600"
-                                  : "700",
-                              color:
-                                "#1f2937",
-                            }}
-                          >
-                            {formatNotificationType(
-                              notification.type
-                            )}
-                          </span>
-
-                          {/* Unread Dot */}
-
-                          {!notification.read && (
-                            <span
-                              style={{
-                                width: "8px",
-                                height: "8px",
-                                flexShrink: 0,
-                                borderRadius:
-                                  "50%",
-                                background:
-                                  "#2563eb",
-                              }}
-                            />
-                          )}
-                        </div>
-
-                        {/* Message */}
-
-                        <div
-                          style={{
-                            marginTop:
-                              "5px",
+                            color:
+                              "#1e293b",
                             fontSize:
                               "13px",
-                            lineHeight:
-                              "1.5",
-                            color:
-                              "#6b7280",
                           }}
                         >
-                          {
-                            notification.message
-                          }
-                        </div>
-
-                        {/* Time */}
-
-                        <div
-                          style={{
-                            marginTop:
-                              "8px",
-                            fontSize:
-                              "11px",
-                            color:
-                              "#9ca3af",
-                          }}
-                        >
-                          🕒{" "}
-                          {formatTime(
-                            notification.createdAt
+                          {getNotificationTitle(
+                            notification.type
                           )}
-                        </div>
-
-                        {/* Unread Text */}
+                        </strong>
 
                         {!notification.read && (
-                          <div
+                          <span
                             style={{
-                              marginTop:
-                                "7px",
-                              fontSize:
-                                "11px",
-                              color:
+                              width: "8px",
+                              height: "8px",
+                              borderRadius:
+                                "50%",
+                              background:
                                 "#2563eb",
-                              fontWeight:
-                                "600",
+                              marginTop:
+                                "5px",
+                              flexShrink: 0,
                             }}
-                          >
-                            Click to mark as
-                            read
-                          </div>
+                          />
                         )}
                       </div>
+
+                      <p
+                        style={{
+                          margin:
+                            "5px 0",
+                          color:
+                            "#475569",
+                          fontSize:
+                            "13px",
+                          lineHeight:
+                            "1.5",
+                        }}
+                      >
+                        {
+                          notification.message
+                        }
+                      </p>
+
+                      <span
+                        style={{
+                          color:
+                            "#94a3b8",
+                          fontSize:
+                            "11px",
+                        }}
+                      >
+                        {formatDate(
+                          notification.createdAt
+                        )}
+                      </span>
                     </div>
                   </div>
-                )
+                </div>
               )
             )}
-          </div>
-
-          {/* =================================================
-              FOOTER
-          ================================================== */}
-
-          {notifications.length > 0 && (
-            <div
-              style={{
-                padding:
-                  "11px 18px",
-                borderTop:
-                  "1px solid #e5e7eb",
-                background:
-                  "#f9fafb",
-                textAlign: "center",
-                fontSize: "11px",
-                color: "#9ca3af",
-              }}
-            >
-              CrisisConnect • Emergency
-              Notifications
-            </div>
-          )}
         </div>
       )}
     </div>
