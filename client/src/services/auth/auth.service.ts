@@ -171,28 +171,24 @@ export const getMe = async () => {
   const token = getToken();
 
   if (!token) {
-    throw new Error(
-      "Authentication token not found"
-    );
+    throw new Error("Authentication token not found");
   }
 
-  const response = await fetch(
-    `${API_URL}/auth/me`,
-    {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    }
-  );
+  const response = await fetch(`${API_URL}/auth/me`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
 
   const data = await response.json();
 
+  console.log("GET /auth/me response:", data);
+
   if (!response.ok) {
     throw new Error(
-      data.message ||
-        "Failed to get authenticated user"
+      data.message || "Authentication failed"
     );
   }
 
