@@ -451,3 +451,46 @@ export const resolveAssignment = async (
         assignment: result,
     };
 };
+
+
+export const getMyAssignments = async (userId: string) => {
+    const responder = await prisma.responder.findUnique({
+        where: {
+            userId,
+        },
+    });
+
+    if (!responder) {
+        return {
+            error: "RESPONDER_NOT_FOUND",
+        };
+    }
+
+    const assignments = await prisma.incidentAssignment.findMany({
+        where: {
+            responderId: responder.id,
+        },
+        orderBy: {
+            assignedAt: "desc",
+        },
+        include: {
+            emergency: true,
+            responder: {
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            name: true,
+                            phone: true,
+                            email: true,
+                        },
+                    },
+                },
+            },
+        },
+    });
+
+    return {
+        assignments,
+    };
+};

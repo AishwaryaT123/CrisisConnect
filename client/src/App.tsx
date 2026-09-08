@@ -4,6 +4,7 @@ import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import NotificationBell from "./components/notification/NotificationBell";
 import CitizenDashboard from "./pages/citizen/CitizenDashboard";
+import ResponderDashboard from "./pages/responder/ResponderDashboard";
 
 import {
   getCurrentUser,
@@ -335,10 +336,14 @@ function App() {
         </div>
       </header>
 
-      {/* CITIZEN DASHBOARD */}
+      {user.role === "CITIZEN" && (
+        <CitizenDashboard userName={user.name} />
+      )}
 
-      <CitizenDashboard userName={user.name} />
-      
+      {user.role === "RESPONDER" && (
+        <ResponderDashboard userName={user.name} />
+      )}
+
     </div>
   );
 }

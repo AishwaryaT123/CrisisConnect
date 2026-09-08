@@ -1,5 +1,58 @@
 import { Request, Response } from "express";
-import { acceptAssignment, markAssignmentEnRoute, markAssignmentArrived, resolveAssignment, } from "../../services/responder/assignment.service";
+import { acceptAssignment, markAssignmentEnRoute, markAssignmentArrived, resolveAssignment, getMyAssignments, } from "../../services/responder/assignment.service";
+
+
+export const getMyAssignmentsController = async (
+    req: Request,
+    res: Response
+): Promise<void> => {
+    try {
+        const userId = req.user?.userId;
+
+        if (!userId) {
+            res.status(401).json({
+                success: false,
+                message: "Authentication required",
+            });
+
+            return;
+        }
+
+        const result = await getMyAssignments(userId);
+
+        if ("error" in result) {
+            if (result.error === "RESPONDER_NOT_FOUND") {
+                res.status(404).json({
+                    success: false,
+                    message: "Responder profile not found",
+                });
+
+                return;
+            }
+
+            res.status(400).json({
+                success: false,
+                message: result.error,
+            });
+
+            return;
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Responder assignments retrieved successfully",
+            data: result.assignments,
+        });
+    } catch (error) {
+        console.error("Get my assignments error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to retrieve responder assignments",
+        });
+    }
+};
+
 
 export const acceptAssignmentController = async (
     req: Request,
