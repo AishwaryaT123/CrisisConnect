@@ -33,7 +33,7 @@ interface Assignment {
 interface ResponderProfile {
   id: string;
   responderType: string;
-  availabilityStatus: string;
+  availability: string;
   verificationStatus: string;
   latitude?: number | null;
   longitude?: number | null;
@@ -222,12 +222,21 @@ const ResponderDashboard = ({
     loadResponderProfile();
     loadAssignments();
 
-    const interval = setInterval(() => {
+    updateLocation();
+
+    // Refresh assignments every 10 seconds
+    const assignmentInterval = setInterval(() => {
       loadAssignments();
     }, 10000);
 
+    // Update responder location every 30 seconds
+    const locationInterval = setInterval(() => {
+      updateLocation();
+    }, 30000);
+
     return () => {
-      clearInterval(interval);
+      clearInterval(assignmentInterval);
+      clearInterval(locationInterval);
     };
   }, []);
 
@@ -853,6 +862,33 @@ const ResponderDashboard = ({
                     marginTop: "18px",
                   }}
                 >
+
+
+                  {/* NAVIGATE TO EMERGENCY */}
+
+                  {emergency.status !== "RESOLVED" &&
+                    emergency.status !== "CANCELLED" && (
+                      <button
+                        onClick={() =>
+                          openLocation(
+                            emergency.latitude,
+                            emergency.longitude
+                          )
+                        }
+                        style={{
+                          padding: "9px 14px",
+                          border: "none",
+                          borderRadius: "7px",
+                          background: "#f59e0b",
+                          color: "#ffffff",
+                          cursor: "pointer",
+                          fontWeight: "600",
+                        }}
+                      >
+                        📍 Navigate
+                      </button>
+                    )}
+
                   {/* ACCEPT */}
 
                   {emergency.status === "ASSIGNED" && (
