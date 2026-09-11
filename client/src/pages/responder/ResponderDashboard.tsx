@@ -214,6 +214,29 @@ const ResponderDashboard = ({
     }
   };
 
+
+
+  const totalAssignments = assignments.length;
+
+  const activeAssignments = assignments.filter(
+    (assignment) =>
+      assignment.emergency.status !== "RESOLVED" &&
+      assignment.emergency.status !== "CANCELLED"
+  ).length;
+
+  const resolvedAssignments = assignments.filter(
+    (assignment) =>
+      assignment.emergency.status === "RESOLVED"
+  ).length;
+
+  const criticalAssignments = assignments.filter(
+    (assignment) =>
+      assignment.emergency.priority === "CRITICAL" &&
+      assignment.emergency.status !== "RESOLVED" &&
+      assignment.emergency.status !== "CANCELLED"
+  ).length;
+  
+
   // =====================================================
   // LOAD ON PAGE OPEN + EVERY 10 SECONDS
   // =====================================================
@@ -613,6 +636,142 @@ const ResponderDashboard = ({
             ✓ {locationMessage}
           </div>
         )}
+      </div>
+
+
+
+      <div
+        style={{
+          marginBottom: "30px",
+          display: "grid",
+          gridTemplateColumns:
+            "repeat(auto-fit, minmax(200px, 1fr))",
+          gap: "15px",
+        }}
+      >
+        {/* TOTAL */}
+
+        <div
+          style={{
+            padding: "20px",
+            background: "#ffffff",
+            border: "1px solid #e2e8f0",
+            borderRadius: "12px",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "13px",
+              color: "#64748b",
+            }}
+          >
+            Total Assignments
+          </div>
+
+          <div
+            style={{
+              marginTop: "8px",
+              fontSize: "28px",
+              fontWeight: "700",
+              color: "#1e293b",
+            }}
+          >
+            {totalAssignments}
+          </div>
+        </div>
+
+        {/* ACTIVE */}
+
+        <div
+          style={{
+            padding: "20px",
+            background: "#ffffff",
+            border: "1px solid #e2e8f0",
+            borderRadius: "12px",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "13px",
+              color: "#64748b",
+            }}
+          >
+            Active Emergencies
+          </div>
+
+          <div
+            style={{
+              marginTop: "8px",
+              fontSize: "28px",
+              fontWeight: "700",
+              color: "#2563eb",
+            }}
+          >
+            {activeAssignments}
+          </div>
+        </div>
+
+        {/* RESOLVED */}
+
+        <div
+          style={{
+            padding: "20px",
+            background: "#ffffff",
+            border: "1px solid #e2e8f0",
+            borderRadius: "12px",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "13px",
+              color: "#64748b",
+            }}
+          >
+            Resolved
+          </div>
+
+          <div
+            style={{
+              marginTop: "8px",
+              fontSize: "28px",
+              fontWeight: "700",
+              color: "#15803d",
+            }}
+          >
+            {resolvedAssignments}
+          </div>
+        </div>
+
+        {/* CRITICAL */}
+
+        <div
+          style={{
+            padding: "20px",
+            background: "#ffffff",
+            border: "1px solid #e2e8f0",
+            borderRadius: "12px",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "13px",
+              color: "#64748b",
+            }}
+          >
+            Critical Active
+          </div>
+
+          <div
+            style={{
+              marginTop: "8px",
+              fontSize: "28px",
+              fontWeight: "700",
+              color: "#dc2626",
+            }}
+          >
+            {criticalAssignments}
+          </div>
+        </div>
       </div>
 
       {/* =====================================================
