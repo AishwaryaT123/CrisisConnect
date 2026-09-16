@@ -235,7 +235,21 @@ const ResponderDashboard = ({
       assignment.emergency.status !== "RESOLVED" &&
       assignment.emergency.status !== "CANCELLED"
   ).length;
-  
+
+  const activeAssignmentsList = assignments.filter(
+    (assignment) =>
+      assignment.emergency.status === "ASSIGNED" ||
+      assignment.emergency.status === "ACCEPTED" ||
+      assignment.emergency.status === "EN_ROUTE" ||
+      assignment.emergency.status === "ARRIVED"
+  );
+
+  const historyAssignmentsList = assignments.filter(
+    (assignment) =>
+      assignment.emergency.status === "RESOLVED" ||
+      assignment.emergency.status === "CANCELLED"
+  );
+
 
   // =====================================================
   // LOAD ON PAGE OPEN + EVERY 10 SECONDS
@@ -428,52 +442,34 @@ const ResponderDashboard = ({
 
   return (
     <main
-      style={{
-        padding: "35px",
-        maxWidth: "1400px",
-        margin: "0 auto",
-      }}
+      style= {{ padding: "35px", maxWidth: "1400px", margin: "0 auto",}}
     >
       {/* =====================================================
           HEADER
       ===================================================== */}
 
-      <div
-        style={{
-          marginBottom: "30px",
-        }}
+      <div style = {{ marginBottom: "30px",}}
       >
-        <h2
-          style={{
-            margin: 0,
-            color: "#0f172a",
-            fontSize: "30px",
-          }}
+        <h2 style={{ margin: 0, color:"#0f172a",fontSize: "30px",}}
         >
           Responder Dashboard
         </h2>
 
-        <p
-          style={{
-            color: "#64748b",
-            marginTop: "8px",
-          }}
+        <p style = {{ color: "#64748b",marginTop: "8px",}}
         >
-          Welcome, {userName}. Manage your assigned
-          emergency requests.
+          Welcome, { userName }.Manage your assigned emergency requests.
         </p>
 
         {/* =====================================================
-    RESPONDER AVAILABILITY
-===================================================== */}
+          RESPONDER AVAILABILITY
+        ===================================================== */}
 
         <div
           style={{
             marginTop: "20px",
             padding: "18px",
             background: "#ffffff",
-            border: "1px solid #e2e8f0",
-            borderRadius: "12px",
+            border: "1px solid #e2e8f0",borderRadius: "12px",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -482,40 +478,33 @@ const ResponderDashboard = ({
           }}
         >
           <div>
-            <strong
-              style={{
-                color: "#1e293b",
-                fontSize: "15px",
-              }}
+            <strong style={{
+              color: "#1e293b",
+              fontSize: "15px",}}
             >
               Responder Availability
             </strong>
 
-            <div
-              style={{
-                marginTop: "5px",
-                fontSize: "12px",
-                color: "#64748b",
-              }}
+            <div style = {{
+              marginTop: "5px",
+              fontSize: "12px",
+              color: "#64748b",}}
             >
-              Control whether you can receive
-              emergency assignments.
+              Control whether you can receive emergency assignments.
             </div>
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-            }}
+          <div style = {{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",}}
           >
-            <select
-              value={availability}
-              onChange={(e) =>
+            <select 
+              value={ availability }
+              onChange = {(e) =>
                 setAvailability(e.target.value)
               }
-              style={{
+              style = {{
                 padding: "9px 12px",
                 borderRadius: "7px",
                 border: "1px solid #cbd5e1",
@@ -524,23 +513,21 @@ const ResponderDashboard = ({
                 cursor: "pointer",
               }}
             >
-              <option value="AVAILABLE">
+              <option value="AVAILABLE" >
                 AVAILABLE
               </option>
-
-              <option value="BUSY">
+              
+              <option value = "BUSY" >
                 BUSY
               </option>
-
-              <option value="OFFLINE">
+              
+              <option value = "OFFLINE" >
                 OFFLINE
               </option>
             </select>
-
-            <button
-              onClick={updateAvailability}
-              disabled={updatingAvailability}
-              style={{
+            
+            <button 
+              onClick = { updateAvailability } disabled = { updatingAvailability } style = {{
                 padding: "9px 14px",
                 border: "none",
                 borderRadius: "7px",
@@ -564,28 +551,26 @@ const ResponderDashboard = ({
       </div>
 
 
-      <div
-        style={{
+      <div 
+        style = {{
           marginBottom: "30px",
           padding: "20px",
-          border: "1px solid #e5e7eb",
-          borderRadius: "12px",
+          border: "1px solid #e5e7eb",borderRadius: "12px",
           background: "#ffffff",
         }}
       >
-        <h2 style={{ marginBottom: "10px" }}>
+        <h2 style={ { marginBottom: "10px" } }>
           📍 Location Tracking
         </h2>
 
-        <p style={{ color: "#6b7280", marginBottom: "15px" }}>
-          Update your current location so the system can find you
-          for nearby emergency assignments.
+        <p style = {{ color: "#6b7280", marginBottom: "15px" }}>
+          Update your current location so the system can find you for nearby emergency assignments.
         </p>
 
         <button
-          onClick={updateLocation}
-          disabled={updatingLocation}
-          style={{
+          onClick = { updateLocation }
+          disabled = { updatingLocation }
+          style = {{
             padding: "10px 16px",
             borderRadius: "8px",
             border: "none",
@@ -599,28 +584,25 @@ const ResponderDashboard = ({
             ? "Updating Location..."
             : "📍 Update My Location"}
         </button>
-
+        
         {location && (
           <div
             style={{
               marginTop: "15px",
               padding: "12px",
-              background: "#f3f4f6",
-              borderRadius: "8px",
+              background: "#f3f4f6",borderRadius: "8px",
             }}
           >
             <p>
-              <strong>Latitude:</strong>{" "}
-              {location.latitude}
+              <strong>Latitude: </strong>{" "}{location.latitude}
             </p>
-
+            
             <p>
-              <strong>Longitude:</strong>{" "}
-              {location.longitude}
+              <strong>Longitude: </strong>{" "}{location.longitude}
             </p>
           </div>
         )}
-
+        
         {locationMessage && (
           <div
             style={{
@@ -633,26 +615,25 @@ const ResponderDashboard = ({
               fontWeight: "600",
             }}
           >
-            ✓ {locationMessage}
+            ✓ { locationMessage }
           </div>
         )}
       </div>
-
-
-
+      
+      
+      
       <div
-        style={{
+        style = {{
           marginBottom: "30px",
           display: "grid",
-          gridTemplateColumns:
-            "repeat(auto-fit, minmax(200px, 1fr))",
+          gridTemplateColumns:"repeat(auto-fit, minmax(200px, 1fr))",
           gap: "15px",
         }}
       >
-        {/* TOTAL */}
-
+        {/* TOTAL */ }
+        
         <div
-          style={{
+          style = {{
             padding: "20px",
             background: "#ffffff",
             border: "1px solid #e2e8f0",
@@ -667,9 +648,9 @@ const ResponderDashboard = ({
           >
             Total Assignments
           </div>
-
+          
           <div
-            style={{
+            style = {{
               marginTop: "8px",
               fontSize: "28px",
               fontWeight: "700",
@@ -679,9 +660,9 @@ const ResponderDashboard = ({
             {totalAssignments}
           </div>
         </div>
-
-        {/* ACTIVE */}
-
+        
+        {/* ACTIVE */ }
+        
         <div
           style={{
             padding: "20px",
@@ -690,7 +671,7 @@ const ResponderDashboard = ({
             borderRadius: "12px",
           }}
         >
-          <div
+          <div 
             style={{
               fontSize: "13px",
               color: "#64748b",
@@ -698,9 +679,9 @@ const ResponderDashboard = ({
           >
             Active Emergencies
           </div>
-
+          
           <div
-            style={{
+            style = {{
               marginTop: "8px",
               fontSize: "28px",
               fontWeight: "700",
@@ -710,9 +691,9 @@ const ResponderDashboard = ({
             {activeAssignments}
           </div>
         </div>
-
-        {/* RESOLVED */}
-
+        
+        {/* RESOLVED */ }
+        
         <div
           style={{
             padding: "20px",
@@ -729,9 +710,9 @@ const ResponderDashboard = ({
           >
             Resolved
           </div>
-
+          
           <div
-            style={{
+            style = {{
               marginTop: "8px",
               fontSize: "28px",
               fontWeight: "700",
@@ -741,9 +722,9 @@ const ResponderDashboard = ({
             {resolvedAssignments}
           </div>
         </div>
-
-        {/* CRITICAL */}
-
+        
+        {/* CRITICAL */ }
+        
         <div
           style={{
             padding: "20px",
@@ -760,9 +741,9 @@ const ResponderDashboard = ({
           >
             Critical Active
           </div>
-
+          
           <div
-            style={{
+            style = {{
               marginTop: "8px",
               fontSize: "28px",
               fontWeight: "700",
@@ -773,13 +754,13 @@ const ResponderDashboard = ({
           </div>
         </div>
       </div>
-
+      
       {/* =====================================================
           ERROR
       ===================================================== */}
-
+      
       {error && (
-        <div
+        <div 
           style={{
             padding: "14px 18px",
             marginBottom: "20px",
@@ -792,7 +773,7 @@ const ResponderDashboard = ({
           {error}
         </div>
       )}
-
+      
       {successMessage && (
         <div
           style={{
@@ -805,17 +786,17 @@ const ResponderDashboard = ({
             fontWeight: "600",
           }}
         >
-          ✓ {successMessage}
+          ✓ { successMessage }
         </div>
       )}
 
       {/* =====================================================
           LOADING
       ===================================================== */}
-
+      
       {loading ? (
         <div
-          style={{
+          style= {{ 
             padding: "40px",
             background: "#ffffff",
             borderRadius: "12px",
@@ -826,12 +807,8 @@ const ResponderDashboard = ({
           Loading assigned emergencies...
         </div>
       ) : assignments.length === 0 ? (
-        /* =====================================================
-           NO ASSIGNMENTS
-        ===================================================== */
-
         <div
-          style={{
+          style= {{
             padding: "50px",
             background: "#ffffff",
             borderRadius: "16px",
@@ -839,349 +816,655 @@ const ResponderDashboard = ({
             border: "1px solid #e2e8f0",
           }}
         >
-          <div
-            style={{
-              fontSize: "45px",
-              marginBottom: "12px",
-            }}
-          >
-            🚑
-          </div>
-
-          <h3
-            style={{
-              color: "#334155",
-              margin: 0,
-            }}
-          >
-            No Assigned Emergencies
-          </h3>
-
-          <p
-            style={{
-              color: "#64748b",
-              fontSize: "13px",
-            }}
-          >
-            New emergency assignments will appear
-            here.
+          <div style={{ fontSize: "45px", marginBottom: "12px" }}>🚑</div>
+          <h3 style = {{ color: "#334155", margin: 0 }}> No Assigned Emergencies </h3>
+          <p style = {{ color: "#64748b", fontSize: "13px" }}>
+            New emergency assignments will appear here.
           </p>
         </div>
       ) : (
-        /* =====================================================
-           ASSIGNMENT CARDS
-        ===================================================== */
+        <>
+          <section style= {{ marginBottom: "28px" }}>
+            
+            <div style={ { marginBottom: "14px" } }>
+              <h2 style={ { margin: 0, color: "#1e293b", fontSize: "20px" } }>🚨 Active Emergencies </h2>
+              <p style = {{ margin: "6px 0 0", color: "#64748b", fontSize: "13px" }}> Emergencies currently assigned to you and requiring action.</p>
+            </div>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns:
-              "repeat(auto-fit, minmax(320px, 1fr))",
-            gap: "20px",
-          }}
-        >
-          {assignments.map((assignment) => {
-            const emergency = assignment.emergency;
+            {activeAssignmentsList.length === 0 ? (
+              
+              <div style= {{ padding: "28px", background: "#ffffff", borderRadius: "12px", textAlign: "center", border: "1px solid #e2e8f0", color: "#64748b", fontSize: "13px" }}>
+                No active emergencies right now.
+              </div>
 
-            return (
-              <div
-                key={assignment.id}
-                style={{
-                  background: "#ffffff",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "14px",
-                  padding: "22px",
-                  boxShadow:
-                    "0 4px 15px rgba(0,0,0,0.05)",
-                }}
+            ) : (
+
+              <div style= {{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "20px" }}>
+                
+                {activeAssignmentsList.map((assignment) => {
+                  const emergency = assignment.emergency;
+                  
+                  return (
+                    <div
+                      key= { assignment.id }
+                      style = {{
+                        background: "#ffffff",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "14px",
+                        padding: "22px",
+                        boxShadow:"0 4px 15px rgba(0,0,0,0.05)",
+                      }}
+                      >
+                        {/* =====================================================
+                          TITLE + STATUS
+                        ===================================================== */}
+                        
+                        <div
+                          style = {{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            gap: "10px",
+                          }}
+                        >
+                          <h3
+                            style={{
+                              margin: 0,
+                              color: "#1e293b",
+                            }}
+                          >
+                            🚨 { emergency.type }
+                          </h3>
+                          
+                          <span
+                            style = {{
+                              padding: "5px 10px",
+                              borderRadius: "20px",
+                              background: "#eff6ff",
+                              color: "#2563eb",
+                              fontSize: "11px",
+                              fontWeight: "700",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {emergency.status}
+                          </span>
+                        </div>
+                        
+                        {/* =====================================================
+                            DESCRIPTION
+                        ===================================================== */}
+                        
+                        <p
+                          style={{ 
+                            color: "#475569",
+                            fontSize: "13px",
+                            lineHeight: "1.6",
+                            marginTop: "15px",
+                          }}
+                        >
+                          {emergency.description ||
+                            "No description provided."}
+                        </p>
+                        
+                        {/* =====================================================
+                            EMERGENCY DETAILS
+                        ===================================================== */}
+                        
+                        <div
+                          style={{
+                            padding: "14px",
+                            background: "#f8fafc",
+                            borderRadius: "8px",
+                            fontSize: "12px",
+                            color: "#475569",
+                            lineHeight: "1.8",
+                          }}
+                        >
+                          <div>
+                            <strong>Priority: </strong>{" "}
+                            {emergency.priority ||
+                              "Not specified"}
+                          </div>
+                          
+                          <div>
+                            <strong>Latitude: </strong>{" "}
+                            {emergency.latitude ??
+                              "Not available"}
+                          </div>
+                          
+                          <div>
+                            <strong>Longitude: </strong>{" "}
+                            {emergency.longitude ??
+                              "Not available"}
+                          </div>
+                          
+                          <div>
+                            <strong>Created: </strong>{" "}
+                            {formatDate(
+                              emergency.createdAt
+                            )}
+                          </div>
+                          
+                          <div>
+                            <strong>Assigned: </strong>{" "}
+                            {formatDate(
+                              assignment.assignedAt
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* =====================================================
+                            ASSIGNMENT ID
+                        ===================================================== */}
+                        
+                        <div
+                          style={{
+                            marginTop: "12px",
+                            fontSize: "11px",
+                            color: "#94a3b8",
+                            wordBreak: "break-all",
+                          }}
+                        >
+                          Assignment ID: { assignment.id }
+                        </div>
+                        
+                        {/* =====================================================
+                        ACTIONS
+                    ===================================================== */}
+                    
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "8px",
+                            flexWrap: "wrap",
+                            marginTop: "18px",
+                          }}
+                        >
+                        
+                        
+                          {/* NAVIGATE TO EMERGENCY */ }
+                          
+                          {emergency.status !== "RESOLVED" &&
+                            emergency.status !== "CANCELLED" && (
+                              <button
+                                onClick={() =>
+                                  openLocation(
+                                    emergency.latitude,
+                                    emergency.longitude
+                                  )
+                                }
+                                style = {{
+                                  padding: "9px 14px",
+                                  border: "none",
+                                  borderRadius: "7px",
+                                  background: "#f59e0b",
+                                  color: "#ffffff",
+                                  cursor: "pointer",
+                                  fontWeight: "600",
+                                }}
+                              >
+                                📍 Navigate
+                              </button>
+                            )
+                          }
+                            
+                          {/* ACCEPT */ }
+                          
+                          {emergency.status === "ASSIGNED" && (
+                            <button
+                              onClick={() =>
+                                updateAssignment(
+                                  assignment.id,
+                                  "accept"
+                                )
+                              }
+                              style = {{
+                                padding: "9px 14px",
+                                border: "none",
+                                borderRadius: "7px",
+                                background: "#16a34a",
+                                color: "#ffffff",
+                                cursor: "pointer",
+                                fontWeight: "600",
+                              }}
+                            >
+                              ✓ Accept
+                            </button>
+                          )}
+                          
+                          {/* EN ROUTE */ }
+                          
+                          {emergency.status === "ACCEPTED" && (
+                            <button
+                              onClick={() =>
+                                updateAssignment(
+                                  assignment.id,
+                                  "en-route"
+                                )
+                              }
+                              style = {{
+                                padding: "9px 14px",
+                                border: "none",
+                                borderRadius: "7px",
+                                background: "#2563eb",
+                                color: "#ffffff",
+                                cursor: "pointer",
+                                fontWeight: "600",
+                              }}
+                            >
+                              🚨 En Route
+                            </button>
+                          )}
+                          
+                          {/* ARRIVED */ }
+                          
+                          {emergency.status === "EN_ROUTE" && (
+                            <button
+                              onClick={() =>
+                                updateAssignment(
+                                  assignment.id,
+                                  "arrived"
+                                )
+                              }
+                              style = {{
+                                padding: "9px 14px",
+                                border: "none",
+                                borderRadius: "7px",
+                                background: "#7c3aed",
+                                color: "#ffffff",
+                                cursor: "pointer",
+                                fontWeight: "600",
+                              }}
+                            >
+                              📍 Arrived
+                            </button>
+                          )}
+                          
+                          {/* RESOLVE */ }
+                          
+                          {emergency.status === "ARRIVED" && (
+                            <button
+                              onClick={() =>
+                                updateAssignment(
+                                  assignment.id,
+                                  "resolve"
+                                )
+                              }
+                              style = {{
+                                padding: "9px 14px",
+                                border: "none",
+                                borderRadius: "7px",
+                                background: "#059669",
+                                color: "#ffffff",
+                                cursor: "pointer",
+                                fontWeight: "600",
+                              }}
+                            >
+                              ✓ Resolve
+                            </button>
+                          )}
+                          
+                          {/* RESOLVED */ }
+                          
+                          {emergency.status === "RESOLVED" && (
+                            <span
+                              style={{ 
+                                padding: "9px 14px",
+                                borderRadius: "7px",
+                                background: "#dcfce7",
+                                color: "#15803d",
+                                fontWeight: "600",
+                                fontSize: "13px",
+                              }}
+                            >
+                              ✓ Emergency Resolved
+                            </span>
+                          )}
+                          
+                          {/* CANCELLED */ }
+                          
+                          {emergency.status === "CANCELLED" && (
+                            <span
+                              style={{
+                                padding: "9px 14px",
+                                borderRadius: "7px",
+                                background: "#fee2e2",
+                                color: "#dc2626",
+                                fontWeight: "600",
+                                fontSize: "13px",
+                              }}
+                            >
+                              Emergency Cancelled
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                })}
+              </div>
+            )}
+          </section>
+        
+          <section style = {{ marginBottom: "28px" }}>
+            <div style={ { marginBottom: "14px" } }>
+              <h2 style={ { margin: 0, color: "#1e293b", fontSize: "20px" } }>📋 Emergency History </h2>
+              <p style = {{ margin: "6px 0 0", color: "#64748b", fontSize: "13px" }}> Previously completed or cancelled emergency assignments.</p>
+            </div>
+            
+            {historyAssignmentsList.length === 0 ? (
+              <div style= {{ padding: "28px", background: "#ffffff", borderRadius: "12px", textAlign: "center", border: "1px solid #e2e8f0", color: "#64748b", fontSize: "13px" }}
               >
-                {/* =====================================================
-                    TITLE + STATUS
-                ===================================================== */}
-
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: "10px",
-                  }}
-                >
-                  <h3
-                    style={{
-                      margin: 0,
-                      color: "#1e293b",
-                    }}
-                  >
-                    🚨 {emergency.type}
-                  </h3>
-
-                  <span
-                    style={{
-                      padding: "5px 10px",
-                      borderRadius: "20px",
-                      background: "#eff6ff",
-                      color: "#2563eb",
-                      fontSize: "11px",
-                      fontWeight: "700",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {emergency.status}
-                  </span>
-                </div>
-
-                {/* =====================================================
-                    DESCRIPTION
-                ===================================================== */}
-
-                <p
-                  style={{
-                    color: "#475569",
-                    fontSize: "13px",
-                    lineHeight: "1.6",
-                    marginTop: "15px",
-                  }}
-                >
-                  {emergency.description ||
-                    "No description provided."}
-                </p>
-
-                {/* =====================================================
-                    EMERGENCY DETAILS
-                ===================================================== */}
-
-                <div
-                  style={{
-                    padding: "14px",
-                    background: "#f8fafc",
-                    borderRadius: "8px",
-                    fontSize: "12px",
-                    color: "#475569",
-                    lineHeight: "1.8",
-                  }}
-                >
-                  <div>
-                    <strong>Priority:</strong>{" "}
-                    {emergency.priority ||
-                      "Not specified"}
-                  </div>
-
-                  <div>
-                    <strong>Latitude:</strong>{" "}
-                    {emergency.latitude ??
-                      "Not available"}
-                  </div>
-
-                  <div>
-                    <strong>Longitude:</strong>{" "}
-                    {emergency.longitude ??
-                      "Not available"}
-                  </div>
-
-                  <div>
-                    <strong>Created:</strong>{" "}
-                    {formatDate(
-                      emergency.createdAt
-                    )}
-                  </div>
-
-                  <div>
-                    <strong>Assigned:</strong>{" "}
-                    {formatDate(
-                      assignment.assignedAt
-                    )}
-                  </div>
-                </div>
-
-                {/* =====================================================
-                    ASSIGNMENT ID
-                ===================================================== */}
-
-                <div
-                  style={{
-                    marginTop: "12px",
-                    fontSize: "11px",
-                    color: "#94a3b8",
-                    wordBreak: "break-all",
-                  }}
-                >
-                  Assignment ID: {assignment.id}
-                </div>
-
-                {/* =====================================================
-                    ACTIONS
-                ===================================================== */}
-
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "8px",
-                    flexWrap: "wrap",
-                    marginTop: "18px",
-                  }}
-                >
-
-
-                  {/* NAVIGATE TO EMERGENCY */}
-
-                  {emergency.status !== "RESOLVED" &&
-                    emergency.status !== "CANCELLED" && (
-                      <button
-                        onClick={() =>
-                          openLocation(
-                            emergency.latitude,
-                            emergency.longitude
-                          )
-                        }
+                No emergency history yet.
+              </div>
+            ) : (
+              
+              <div style= {{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "20px" }}>
+              
+                {historyAssignmentsList.map((assignment) => {
+                  const emergency = assignment.emergency;
+                  
+                  return (
+                    <div
+                      key= { assignment.id }
+                      style = {{
+                        background: "#ffffff",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "14px",
+                        padding: "22px",
+                        boxShadow:"0 4px 15px rgba(0,0,0,0.05)",
+                      }}
+                    >
+                    
+                    {/* =====================================================
+                        TITLE + STATUS
+                    ===================================================== */}
+                    
+                    <div
+                      style = {{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: "10px",
+                      }}
+                    >
+                      <h3
                         style={{
-                          padding: "9px 14px",
-                          border: "none",
-                          borderRadius: "7px",
-                          background: "#f59e0b",
-                          color: "#ffffff",
-                          cursor: "pointer",
-                          fontWeight: "600",
+                          margin: 0,
+                          color: "#1e293b",
                         }}
                       >
-                        📍 Navigate
-                      </button>
-                    )}
-
-                  {/* ACCEPT */}
-
-                  {emergency.status === "ASSIGNED" && (
-                    <button
-                      onClick={() =>
-                        updateAssignment(
-                          assignment.id,
-                          "accept"
-                        )
-                      }
+                        🚨 { emergency.type }
+                      </h3>
+                      
+                      <span
+                        style = {{
+                          padding: "5px 10px",
+                          borderRadius: "20px",
+                          background: "#eff6ff",
+                          color: "#2563eb",
+                          fontSize: "11px",
+                          fontWeight: "700",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        { emergency.status }
+                      </span>
+                    </div>
+                    
+                    {/* =====================================================
+                       DESCRIPTION
+                    ===================================================== */}
+                    
+                    <p
                       style={{
-                        padding: "9px 14px",
-                        border: "none",
-                        borderRadius: "7px",
-                        background: "#16a34a",
-                        color: "#ffffff",
-                        cursor: "pointer",
-                        fontWeight: "600",
-                      }}
-                    >
-                      ✓ Accept
-                    </button>
-                  )}
-
-                  {/* EN ROUTE */}
-
-                  {emergency.status === "ACCEPTED" && (
-                    <button
-                      onClick={() =>
-                        updateAssignment(
-                          assignment.id,
-                          "en-route"
-                        )
-                      }
-                      style={{
-                        padding: "9px 14px",
-                        border: "none",
-                        borderRadius: "7px",
-                        background: "#2563eb",
-                        color: "#ffffff",
-                        cursor: "pointer",
-                        fontWeight: "600",
-                      }}
-                    >
-                      🚨 En Route
-                    </button>
-                  )}
-
-                  {/* ARRIVED */}
-
-                  {emergency.status === "EN_ROUTE" && (
-                    <button
-                      onClick={() =>
-                        updateAssignment(
-                          assignment.id,
-                          "arrived"
-                        )
-                      }
-                      style={{
-                        padding: "9px 14px",
-                        border: "none",
-                        borderRadius: "7px",
-                        background: "#7c3aed",
-                        color: "#ffffff",
-                        cursor: "pointer",
-                        fontWeight: "600",
-                      }}
-                    >
-                      📍 Arrived
-                    </button>
-                  )}
-
-                  {/* RESOLVE */}
-
-                  {emergency.status === "ARRIVED" && (
-                    <button
-                      onClick={() =>
-                        updateAssignment(
-                          assignment.id,
-                          "resolve"
-                        )
-                      }
-                      style={{
-                        padding: "9px 14px",
-                        border: "none",
-                        borderRadius: "7px",
-                        background: "#059669",
-                        color: "#ffffff",
-                        cursor: "pointer",
-                        fontWeight: "600",
-                      }}
-                    >
-                      ✓ Resolve
-                    </button>
-                  )}
-
-                  {/* RESOLVED */}
-
-                  {emergency.status === "RESOLVED" && (
-                    <span
-                      style={{
-                        padding: "9px 14px",
-                        borderRadius: "7px",
-                        background: "#dcfce7",
-                        color: "#15803d",
-                        fontWeight: "600",
+                        color: "#475569",
                         fontSize: "13px",
+                        lineHeight: "1.6",
+                        marginTop: "15px",
                       }}
                     >
-                      ✓ Emergency Resolved
-                    </span>
-                  )}
-
-                  {/* CANCELLED */}
-
-                  {emergency.status === "CANCELLED" && (
-                    <span
+                      {emergency.description ||
+                        "No description provided."}
+                    </p>
+                    
+                    {/* =====================================================
+                        EMERGENCY DETAILS
+                    ===================================================== */}
+                    
+                    <div
                       style={{
-                        padding: "9px 14px",
-                        borderRadius: "7px",
-                        background: "#fee2e2",
-                        color: "#dc2626",
-                        fontWeight: "600",
-                        fontSize: "13px",
+                        padding: "14px",
+                        background: "#f8fafc",
+                        borderRadius: "8px",
+                        fontSize: "12px",
+                        color: "#475569",
+                        lineHeight: "1.8",
                       }}
                     >
-                      Emergency Cancelled
-                    </span>
-                  )}
-                </div>
+                      <div>
+                        <strong>Priority: </strong>{" "}
+                        {emergency.priority ||
+                          "Not specified"}
+                      </div>
+                      
+                      <div>
+                        <strong>Latitude: </strong>{" "}
+                        {emergency.latitude ??
+                          "Not available"}
+                      </div>
+                      
+                      <div>
+                        <strong>Longitude: </strong>{" "}
+                        {emergency.longitude ??
+                          "Not available"}
+                      </div>
+                      
+                      <div>
+                        <strong>Created: </strong>{" "}
+                        {formatDate(
+                          emergency.createdAt
+                        )}
+                      </div>
+                      
+                      <div>
+                        <strong>Assigned: </strong>{" "}
+                        {formatDate(
+                          assignment.assignedAt
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* =====================================================
+                        ASSIGNMENT ID
+                    ===================================================== */}
+                    
+                    <div
+                      style={{
+                        marginTop: "12px",
+                        fontSize: "11px",
+                        color: "#94a3b8",
+                        wordBreak: "break-all",
+                      }}
+                    >
+                      Assignment ID: { assignment.id }
+                    </div>
+                    
+                    {/* =====================================================
+                       ACTIONS
+                    ===================================================== */}
+                    
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "8px",
+                        flexWrap: "wrap",
+                        marginTop: "18px",
+                      }}
+                    >
+                      {/* NAVIGATE TO EMERGENCY */ }
+                      
+                      {emergency.status !== "RESOLVED" &&
+                        emergency.status !== "CANCELLED" && (
+                          <button
+                            onClick={() =>
+                              openLocation(
+                                emergency.latitude,
+                                emergency.longitude
+                              )
+                            }
+                            style = {{
+                              padding: "9px 14px",
+                              border: "none",
+                              borderRadius: "7px",
+                              background: "#f59e0b",
+                              color: "#ffffff",
+                              cursor: "pointer",
+                              fontWeight: "600",
+                            }}
+                          >
+                            📍 Navigate
+                          </button>
+                        )
+                      }
+                        
+                      {/* ACCEPT */ }
+                      
+                      {emergency.status === "ASSIGNED" && (
+                        <button
+                          onClick={() =>
+                            updateAssignment(
+                              assignment.id,
+                              "accept"
+                            )
+                          }
+                          style = {{
+                            padding: "9px 14px",
+                            border: "none",
+                            borderRadius: "7px",
+                            background: "#16a34a",
+                            color: "#ffffff",
+                            cursor: "pointer",
+                            fontWeight: "600",
+                          }}
+                        >
+                          ✓ Accept
+                        </button>
+                      )}
+                      
+                      {/* EN ROUTE */ }
+                      
+                      {emergency.status === "ACCEPTED" && (
+                        <button
+                          onClick={() =>
+                            updateAssignment(
+                              assignment.id,
+                              "en-route"
+                            )
+                          }
+                          style = {{
+                            padding: "9px 14px",
+                            border: "none",
+                            borderRadius: "7px",
+                            background: "#2563eb",
+                            color: "#ffffff",
+                            cursor: "pointer",
+                            fontWeight: "600",
+                          }}
+                        >
+                          🚨 En Route
+                        </button>
+                      )}
+                      
+                      {/* ARRIVED */ }
+                      
+                      {emergency.status === "EN_ROUTE" && (
+                        <button
+                          onClick={() =>
+                            updateAssignment(
+                              assignment.id,
+                              "arrived"
+                            )
+                          }
+                          style = {{
+                            padding: "9px 14px",
+                            border: "none",
+                            borderRadius: "7px",
+                            background: "#7c3aed",
+                            color: "#ffffff",
+                            cursor: "pointer",
+                            fontWeight: "600",
+                          }}
+                        >
+                          📍 Arrived
+                        </button>
+                      )}
+                      
+                      {/* RESOLVE */ }
+                      
+                      {emergency.status === "ARRIVED" && (
+                        <button
+                          onClick={() =>
+                            updateAssignment(
+                              assignment.id,
+                              "resolve"
+                            )
+                          }
+                          style = {{
+                            padding: "9px 14px",
+                            border: "none",
+                            borderRadius: "7px",
+                            background: "#059669",
+                            color: "#ffffff",
+                            cursor: "pointer",
+                            fontWeight: "600",
+                          }}
+                        >
+                          ✓ Resolve
+                        </button>
+                      )}
+                      
+                      {/* RESOLVED */ }
+                      
+                      {emergency.status === "RESOLVED" && (
+                        <span
+                          style={{
+                            padding: "9px 14px",
+                            borderRadius: "7px",
+                            background: "#dcfce7",
+                            color: "#15803d",
+                            fontWeight: "600",
+                            fontSize: "13px",
+                          }}
+                        >
+                          ✓ Emergency Resolved
+                        </span>
+                      )}
+                      
+                      {/* CANCELLED */ }
+                      
+                      {emergency.status === "CANCELLED" && (
+                        <span
+                          style={{
+                            padding: "9px 14px",
+                            borderRadius: "7px",
+                            background: "#fee2e2",
+                            color: "#dc2626",
+                            fontWeight: "600",
+                            fontSize: "13px",
+                          }}
+                        >
+                          Emergency Cancelled
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
               </div>
-            );
-          })}
-        </div>
+            )}
+          </section>
+        </>
       )}
     </main>
   );
